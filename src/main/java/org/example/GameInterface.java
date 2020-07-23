@@ -21,6 +21,8 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
     boolean currentPlayerIsRed;
     //board size
     int boardSize;
+    //if game is running or some player won
+    JLabel gameStatus;
 
     public GameInterface(int size){
         boardSize = size;
@@ -70,6 +72,11 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
         //creating south panel/ it's easy
         south = new JPanel();
         south.setBackground(Color.GRAY);
+        south.setLayout(new BorderLayout());
+        gameStatus = new JLabel("Ready to start");
+        gameStatus.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        gameStatus.setHorizontalAlignment(JLabel.CENTER);
+        south.add(gameStatus, BorderLayout.CENTER);
 
         //packing
         add(field, BorderLayout.CENTER);
@@ -103,8 +110,8 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
                 cell = cellArray.get(row).get(col);
                 if (cell.getOwner() == currentPlayer) count++; else break;
                 if (count >= 5) return true;
-                row += dirX[i];
-                col += dirY[i];
+                row -= dirX[i];
+                col -= dirY[i];
             }
             count = 1;  //not 5 in a row, change row direction
         }
