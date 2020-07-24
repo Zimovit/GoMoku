@@ -19,21 +19,24 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
     ArrayList<ArrayList<Cell>> cellArray;
     //current player
     boolean currentPlayerIsRed;
+    //when game is over, cells won't react on clicks
+    boolean gameIsOver;
     //board size
     int boardSize;
     //if game is running or some player won
     JLabel gameStatus;
 
     public GameInterface(int size){
+        gameIsOver = false;
         boardSize = size;
         setLayout(new BorderLayout());
         setBackground(Color.CYAN);
         currentPlayerIsRed = true;  //red starts
         //initialising array
         cellArray = new ArrayList<>();
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < boardSize; i++){
             cellArray.add(new ArrayList<Cell>());
-            for (int j = 0; j < size; j++){
+            for (int j = 0; j < boardSize; j++){
                 cellArray.get(i).add(new Cell(i, j));
             }
         }
@@ -62,7 +65,7 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
         newGame.addActionListener(this);
         newGame.setEnabled(false);
 
-        reset = new JButton("Reset");
+        reset = new JButton("Quit");
         reset.addActionListener(this);
 
         east.add(playerColor);
@@ -90,11 +93,11 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
         char currentPlayer = (currentPlayerIsRed ? Cell.RED : Cell.BLACK);
 
         int count = 1;  //how many tokens in row. One is already placed
-        int row = x, col = y;
+        int row, col;
         int[] dirX = {0, 1, 1, 1}, dirY = {1, 1, 0, -1}; //directions of checking
         for (int i = 0; i < dirX.length; i++){
-            row += dirX[i];
-            col += dirY[i];
+            row = x + dirX[i];
+            col = y + dirY[i];
 
             while (row >= 0 && row < boardSize && col >= 0 && col < boardSize){
                 cell = cellArray.get(row).get(col);
@@ -127,6 +130,7 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
 
     @Override
     public void mousePressed(MouseEvent e) {
+        if (gameIsOver) return;
         //calculating the clicked cell
         Cell cell = (Cell) e.getSource();
         if (cell.isOccupied()) return;
@@ -134,15 +138,25 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
         if (currentPlayerIsRed){
             cell.setOwner('r');
             playerColor.setBackground(Color.BLACK);
+            gameStatus.setText("Current player: Black");
 
         } else {
             cell.setOwner('b');
             playerColor.setBackground(Color.RED);
+            gameStatus.setText("Current player: Red");
         }
-        if (gameFinished(cell.getxOnBoard(), cell.getyOnBoard())) newGame.setEnabled(true);
-        currentPlayerIsRed = !currentPlayerIsRed;
+
         cell.setOccupied(true);
         repaint();
+
+        if (gameFinished(cell.getxOnBoard(), cell.getyOnBoard())){
+            gameIsOver = true;
+            newGame.setEnabled(true);
+            String winner = currentPlayerIsRed ? "Red" : "Black";
+            gameStatus.setText(winner + " wins!");
+            return;
+        }
+        currentPlayerIsRed = !currentPlayerIsRed;
     }
 
     @Override
@@ -162,6 +176,29 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();  //what button was pressed
+
+        switch (command){
+            case "Quit":
+                System.exit(0);
+                break;  //just let it be XD
+            case "New game": {
+                Cell cell;
+                for (int i = 0; i < boardSize; i++){
+                    for (int j = 0; j < boardSize; j++){
+                        cell = cellArray.get(i).get(j);
+                        cell.setOwner(Cell.NONE);
+                        cell.setOccupied(false);
+                    }
+                }
+
+                newGame.setEnabled(false);
+                currentPlayerIsRed = true;
+                gameIsOver = false;
+                gameStatus.setText("Ready to start");
+                repaint();
+            }
+        }
 
     }
 }
