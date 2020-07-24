@@ -25,6 +25,8 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
     int boardSize;
     //if game is running or some player won
     JLabel gameStatus;
+    //cell indexes to draw a line
+    int startRow, startCol, endRow, endCol;
 
     public GameInterface(int size){
         gameIsOver = false;
@@ -94,14 +96,23 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
 
         int count = 1;  //how many tokens in row. One is already placed
         int row, col;
+        startRow = x;
+        endRow = x;
+        startCol = y;
+        endCol = y;
         int[] dirX = {0, 1, 1, 1}, dirY = {1, 1, 0, -1}; //directions of checking
         for (int i = 0; i < dirX.length; i++){
             row = x + dirX[i];
             col = y + dirY[i];
 
+
             while (row >= 0 && row < boardSize && col >= 0 && col < boardSize){
                 cell = cellArray.get(row).get(col);
-                if (cell.getOwner() == currentPlayer) count++; else break;
+                if (cell.getOwner() == currentPlayer) {
+                    count++;
+                    startRow = row;
+                    startCol = col;
+                } else break;
                 if (count >= 5) return true;
                 row += dirX[i];
                 col += dirY[i];
@@ -111,7 +122,11 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
             col = y - dirY[i];
             while (row >= 0 && row < boardSize && col >= 0 && col < boardSize){
                 cell = cellArray.get(row).get(col);
-                if (cell.getOwner() == currentPlayer) count++; else break;
+                if (cell.getOwner() == currentPlayer) {
+                    count++;
+                    endRow = row;
+                    endCol = col;
+                } else break;
                 if (count >= 5) return true;
                 row -= dirX[i];
                 col -= dirY[i];
@@ -154,9 +169,21 @@ public class GameInterface extends JPanel implements MouseListener, ActionListen
             newGame.setEnabled(true);
             String winner = currentPlayerIsRed ? "Red" : "Black";
             gameStatus.setText(winner + " wins!");
+            repaint();
             return;
         }
         currentPlayerIsRed = !currentPlayerIsRed;
+    }
+
+    public void paintComponent(Graphics g){
+        super.paintComponent(g);
+        if (gameIsOver){
+            Color color = g.getColor();
+            g.setColor(Color.CYAN);
+            g.drawLine(startRow*20+10, startCol*20+10,
+                    endRow*20+10, endCol*20+10);
+            g.setColor(color);
+        }
     }
 
     @Override
